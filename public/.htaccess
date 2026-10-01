@@ -1,0 +1,22 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Handle CORS preflight
+  RewriteCond %{REQUEST_METHOD} OPTIONS
+  RewriteRule ^(.*)$ $1 [R=200,L]
+
+  # Route API requests to api/index.php
+  RewriteRule ^api/(.*)$ api/index.php [QSA,L]
+
+  # If file or directory does not exist, serve index.html for React SPA
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# Security: Deny direct access to config.php and schema.sql
+<FilesMatch "^(config\.php|schema\.sql)$">
+  Order Allow,Deny
+  Deny from all
+</FilesMatch>

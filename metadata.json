@@ -1,0 +1,5 @@
+{
+  "name": "교회 재정 관리 시스템",
+  "description": "교인 관리, 헌금 관리, 입출금 관리 및 보고서 발행을 위한 통합 교회 재정 솔루션",
+  "requestFramePermissions": []
+}

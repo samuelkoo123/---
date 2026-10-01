@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (request.auth.token.email == "samuelkoo123@gmail.com" && request.auth.token.email_verified == true);
+    }
+
+    function isValidChurch(data) {
+      return data.keys().hasAll(['name', 'password', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.password is string && data.password.size() > 0;
+    }
+
+    function isValidMember(data) {
+      return data.keys().hasAll(['name']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 50;
+    }
+
+    function isValidOffering(data) {
+      return data.keys().hasAll(['type', 'amount', 'date']) &&
+             data.type is string && data.amount is number && data.date is string;
+    }
+
+    function isValidTransaction(data) {
+      return data.keys().hasAll(['type', 'category', 'amount', 'date']) &&
+             data.type in ['income', 'expense'] && data.category is string &&
+             data.amount is number && data.date is string;
+    }
+
+    // Church collection rules
+    match /churches/{churchId} {
+      // Allow reading churches for login and existence checks
+      allow read: if true;
+      
+      // Allow creating a church (registration) - Supports Google Admin or master password
+      allow create: if isValidChurch(request.resource.data);
+      
+      // Allow update and delete
+      allow update: if isValidChurch(request.resource.data);
+      allow delete: if true;
+
+      // Subcollections for each church
+      // For now, these are open because we don't have a per-church auth session in Firebase Auth
+      // In a production app, we would use Firebase Auth for each church and check ownership
+      match /members/{memberId} {
+        allow read: if true;
+        allow create, update: if isValidMember(request.resource.data);
+        allow delete: if true;
+      }
+      match /offerings/{offeringId} {
+        allow read: if true;
+        allow create, update: if isValidOffering(request.resource.data);
+        allow delete: if true;
+      }
+      match /transactions/{transactionId} {
+        allow read: if true;
+        allow create, update: if isValidTransaction(request.resource.data);
+        allow delete: if true;
+      }
+    }
+  }
+}
